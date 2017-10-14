@@ -41,6 +41,7 @@ namespace libsignalservice
         private readonly WebSocketConnection websocket;
         private readonly CredentialsProvider credentialsProvider;
 
+        public event EventHandler ConnectionFailed;
         public event TypedEventHandler<SignalServiceMessagePipe, SignalServiceEnvelope> MessageReceived;
 
         public SignalServiceMessagePipe(WebSocketConnection websocket, CredentialsProvider credentialsProvider)
@@ -48,6 +49,7 @@ namespace libsignalservice
             this.websocket = websocket;
 
             this.websocket.MessageReceived += OnMessageReceived;
+            this.websocket.ConnectionFailed += OnConnectionFailed;
             this.credentialsProvider = credentialsProvider;
 
             this.websocket.connect();
@@ -75,6 +77,8 @@ namespace libsignalservice
                 websocket.sendResponse(response);
             }
         }
+
+        private void OnConnectionFailed(object sender, EventArgs e) => ConnectionFailed?.Invoke(sender, e);
 
         public SendMessageResponse send(OutgoingPushMessageList list)
         {

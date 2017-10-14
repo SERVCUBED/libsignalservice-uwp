@@ -53,6 +53,7 @@ namespace libsignalservice.websocket
         private bool connected;
 
         public event EventHandler Connected;
+        public event EventHandler ConnectionFailed;
         public event EventHandler Closed;
         public event TypedEventHandler<WebSocketConnection, WebSocketRequestMessage> MessageReceived;
 
@@ -95,6 +96,9 @@ namespace libsignalservice.websocket
                     //Connected(this, EventArgs.Empty);
                     keepAliveTimer = new Timer(sendKeepAlive, null, TimeSpan.FromSeconds(KEEPALIVE_TIMEOUT_SECONDS), TimeSpan.FromSeconds(KEEPALIVE_TIMEOUT_SECONDS));
                     messageWriter = new DataWriter(socket.OutputStream);
+
+                    Debug.WriteLine("WSC connected...");
+                    Connected?.Invoke(this, EventArgs.Empty);
                 }
                 catch (Exception e)
                 {
@@ -116,10 +120,10 @@ namespace libsignalservice.websocket
                             Debug.WriteLine("Error: " + status);
                             break;
                     }*/
+                    this.connected = false;
+                    ConnectionFailed?.Invoke(this, EventArgs.Empty);
+                    Debug.WriteLine("Unable to connect WSC");
                 }
-
-                this.connected = false;
-                Debug.WriteLine("WSC connected...");
             }
         }
 
@@ -133,6 +137,7 @@ namespace libsignalservice.websocket
                 socket.Close(1000, "OK");
                 socket = null;
                 connected = false;
+                Closed?.Invoke(this, EventArgs.Empty);
             }
 
             /*if (keepAliveSender != null)
